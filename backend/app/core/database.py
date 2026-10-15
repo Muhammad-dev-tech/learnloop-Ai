@@ -34,6 +34,13 @@ AsyncSessionLocal = async_sessionmaker(
 
 Base = declarative_base()
 
+async def init_db():
+    """Create all database tables based on models if they do not exist."""
+    # Ensure all models are imported before creating tables
+    import app.models  # noqa: F401
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
 async def get_db():
     """Dependency that yields an async database session."""
     async with AsyncSessionLocal() as session:
@@ -51,3 +58,4 @@ async def check_database_connection() -> dict:
             return {"status": "connected", "verified": val == 1, "error": None}
     except Exception as e:
         return {"status": "disconnected", "verified": False, "error": str(e)}
+

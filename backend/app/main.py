@@ -2,14 +2,22 @@ from fastapi import FastAPI, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.core.database import check_database_connection, get_db
+from app.core.database import check_database_connection, init_db, get_db
+from app.routers.auth import router as auth_router
 import os
 from pathlib import Path
 
 # Ensure upload directory exists
 upload_path = Path(settings.UPLOAD_DIR)
 upload_path.mkdir(parents=True, exist_ok=True)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on application startup
+    await init_db()
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -18,6 +26,7 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
+    lifespan=lifespan,
 )
 
 # Narrow CORS configuration
@@ -28,6 +37,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Register routers
+app.include_router(auth_router)
+
 
 @app.get("/", tags=["Root"])
 async def root():
