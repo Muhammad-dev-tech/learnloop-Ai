@@ -4,8 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.core.database import check_database_connection, init_db, get_db
+from app.core.database import check_database_connection, init_db, get_db, AsyncSessionLocal
+from app.core.seed import seed_curriculum_if_empty
 from app.routers.auth import router as auth_router
+from app.routers.academic import router as academic_router
+from app.routers.sessions import router as sessions_router
 import os
 from pathlib import Path
 
@@ -17,6 +20,9 @@ upload_path.mkdir(parents=True, exist_ok=True)
 async def lifespan(app: FastAPI):
     # Initialize database tables on application startup
     await init_db()
+    # Seed curriculum subjects, topics, and objectives if empty
+    async with AsyncSessionLocal() as session:
+        await seed_curriculum_if_empty(session)
     yield
 
 app = FastAPI(
@@ -40,6 +46,8 @@ app.add_middleware(
 
 # Register routers
 app.include_router(auth_router)
+app.include_router(academic_router)
+app.include_router(sessions_router)
 
 
 @app.get("/", tags=["Root"])

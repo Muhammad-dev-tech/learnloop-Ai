@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     
     # AI Provider
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-3.8-flash"
     
     # Uploads & Storage
     UPLOAD_DIR: str = str(BACKEND_DIR / "app" / "storage" / "uploads")

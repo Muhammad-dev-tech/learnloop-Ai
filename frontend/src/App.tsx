@@ -9,15 +9,18 @@ import {
   RefreshCw, 
   BookOpen, 
   GraduationCap, 
-  ArrowRight,
-  ShieldCheck,
-  UserCheck,
-  LogOut,
-  LogIn,
-  UserPlus
+  ArrowRight, 
+  ShieldCheck, 
+  UserCheck, 
+  LogOut, 
+  LogIn, 
+  UserPlus,
+  MessageSquare,
+  Compass
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
+import { TutorChatWorkspace } from './components/tutor/TutorChatWorkspace';
 
 interface HealthData {
   status: string;
@@ -39,7 +42,8 @@ interface HealthData {
   };
 }
 
-function MainDashboard() {
+function MainApp() {
+  const [currentView, setCurrentView] = useState<'dashboard' | 'tutor'>('dashboard');
   const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +80,19 @@ function MainDashboard() {
     setAuthModalOpen(true);
   };
 
+  const handleLaunchTutor = () => {
+    if (user) {
+      setCurrentView('tutor');
+    } else {
+      openAuth('login');
+    }
+  };
+
+  // If in tutor view and user is authenticated, render the interactive Tutor Workspace
+  if (currentView === 'tutor' && user) {
+    return <TutorChatWorkspace onBackToDashboard={() => setCurrentView('dashboard')} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-brand-500/30">
       {/* Top Navigation Bar */}
@@ -89,15 +106,24 @@ function MainDashboard() {
               <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 LearnLoop AI
               </span>
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 font-medium">
-                Phase 2: Database & Auth
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                Phase 3: AI Tutor Online
               </span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
+            {/* Direct Switch to Tutor Workspace */}
+            <button
+              onClick={handleLaunchTutor}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md shadow-brand-600/30 transition-all"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Launch AI Tutor</span>
+            </button>
+
             {user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 pl-2 border-l border-slate-800">
                 <div className="text-right hidden sm:block">
                   <div className="text-xs font-semibold text-white">{user.full_name}</div>
                   <div className="text-[11px] text-slate-400">{user.email} (ID: #{user.id})</div>
@@ -111,7 +137,7 @@ function MainDashboard() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
                 <button
                   onClick={() => openAuth('login')}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-all"
@@ -121,10 +147,10 @@ function MainDashboard() {
                 </button>
                 <button
                   onClick={() => openAuth('register')}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-md shadow-brand-600/30 transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-all"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
-                  <span>Create Account</span>
+                  <span>Register</span>
                 </button>
               </div>
             )}
@@ -133,70 +159,87 @@ function MainDashboard() {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-6xl mx-auto px-6 py-12 flex-1 w-full flex flex-col justify-center">
+      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 w-full flex flex-col justify-center">
         {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-xs font-medium mb-4">
             <Sparkles className="w-3.5 h-3.5 text-brand-400" />
-            Adaptive AI-Powered Learning Platform for Students
+            Adaptive AI-Powered Learning Assistant for Students
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-indigo-300 to-purple-400">LearnLoop AI</span>
+            Intelligent Socratic Tutoring with <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-indigo-300 to-purple-400">Gemini 3.8 Flash</span>
           </h1>
           <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
-            Multi-user educational system with real bcrypt password hashing, persistent JWT sessions, 
-            and complete student data isolation across learning sessions and documents.
+            Multi-modal curriculum taxonomy, real-time Socratic inquiry dialogue, explanatory masterclasses, 
+            and complete multi-student isolation across persistent chat sessions.
           </p>
         </div>
 
-        {/* User Session Banner */}
-        <div className="mb-8 p-5 rounded-2xl bg-gradient-to-r from-brand-950/40 via-indigo-950/30 to-slate-900 border border-brand-500/20 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center shrink-0">
-              <UserCheck className="w-5 h-5 text-brand-400" />
+        {/* AI Tutor Launch Banner */}
+        <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-brand-950/60 via-indigo-950/40 to-slate-900 border border-brand-500/30 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center shrink-0 shadow-lg shadow-brand-500/20">
+              <Compass className="w-6 h-6 text-brand-400" />
             </div>
             <div>
-              <div className="text-xs uppercase font-semibold tracking-wider text-brand-400">Authentication State</div>
-              <div className="text-base font-bold text-white mt-0.5">
-                {user ? (
-                  <span className="flex items-center gap-2">
-                    Authenticated: <span className="text-emerald-400">{user.full_name}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
-                      ID #{user.id}
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-slate-300">Guest Visitor (Not Logged In)</span>
-                )}
+              <div className="inline-flex items-center gap-1.5 text-xs uppercase font-bold tracking-wider text-brand-400 mb-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Phase 3 Active Feature
               </div>
-              <div className="text-xs text-slate-400 mt-1">
-                {user
-                  ? `Active session secured via JWT & HTTP-only cookies. Topic progress and documents are isolated to user #${user.id}.`
-                  : 'Register or Sign In with the buttons above to test multi-student account isolation.'}
-              </div>
+              <h3 className="text-lg font-bold text-white">Interactive AI Tutor Workspace</h3>
+              <p className="text-xs text-slate-300 mt-1 max-w-xl">
+                Choose Computer Science & Mathematics topics, select your pedagogical mode (Socratic, Explanatory, Challenge, Notes), and engage in multi-turn dialogues with full persistence.
+              </p>
             </div>
           </div>
           
+          <button
+            onClick={handleLaunchTutor}
+            className="px-5 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-bold shadow-xl shadow-brand-600/30 transition-all flex items-center gap-2 shrink-0"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>{user ? 'Enter Tutor Workspace' : 'Sign In to Launch Tutor'}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* User Session State Card */}
+        <div className="mb-8 p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+              <UserCheck className="w-4 h-4 text-brand-400" />
+            </div>
+            <div>
+              <span className="text-slate-400">Authenticated Student: </span>
+              {user ? (
+                <span className="font-semibold text-emerald-400">
+                  {user.full_name} <span className="text-slate-400 font-normal">({user.email} • ID #{user.id})</span>
+                </span>
+              ) : (
+                <span className="text-slate-400 italic">Guest Visitor (Sign in to save study sessions)</span>
+              )}
+            </div>
+          </div>
           {!user && (
             <button
               onClick={() => openAuth('register')}
-              className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-lg shadow-brand-600/30 transition-all shrink-0"
+              className="text-brand-400 hover:text-brand-300 font-semibold underline underline-offset-4"
             >
-              Register Test Student
+              Create free student account
             </button>
           )}
         </div>
 
-        {/* System Health Status Card */}
+        {/* System Subsystem Health Card */}
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl shadow-black/40 mb-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-800/80 gap-4">
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-brand-400" />
-                Backend Subsystem & Database Health
+                Backend Subsystem & Curriculum Health
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Live verification of database tables, Alembic migrations, storage, and AI readiness
+                Live verification of database tables, seeded STEM topics, Gemini 3.8 Flash, and storage
               </p>
             </div>
             <button
@@ -247,7 +290,7 @@ function MainDashboard() {
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-800/60 text-[11px] text-slate-500">
-                  Alembic Migrations Applied
+                  Curriculum Seeded (STEM)
                 </div>
               </div>
 
@@ -259,24 +302,24 @@ function MainDashboard() {
                     <Cpu className="w-4 h-4 text-purple-400" />
                   </div>
                   <div className="text-base font-bold text-white">
-                    {health?.ai_provider.model || 'gemini-2.5-flash'}
+                    {health?.ai_provider.model || 'gemini-3.8-flash'}
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-xs">
                     {health?.ai_provider.configured ? (
                       <>
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-emerald-400 font-medium">Configured & Ready</span>
+                        <span className="text-emerald-400 font-medium">Configured & Operational</span>
                       </>
                     ) : (
                       <>
                         <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-amber-400 font-medium">Key placeholder in .env</span>
+                        <span className="text-amber-400 font-medium">Offline fallback ready</span>
                       </>
                     )}
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-800/60 text-[11px] text-slate-500">
-                  Google GenAI Provider (v2.31)
+                  Google GenAI SDK (v2.31)
                 </div>
               </div>
 
@@ -331,17 +374,17 @@ function MainDashboard() {
           )}
         </div>
 
-        {/* Next Phase Indicator */}
+        {/* Milestone Tracker */}
         <div className="border border-brand-500/20 bg-brand-500/5 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="text-xs uppercase font-semibold tracking-wider text-brand-400">Next Milestone</div>
-            <div className="text-base font-semibold text-white mt-0.5">Phase 3 — Topic and AI Tutor</div>
+            <div className="text-xs uppercase font-semibold tracking-wider text-brand-400">Next Upcoming Milestone</div>
+            <div className="text-base font-semibold text-white mt-0.5">Phase 4 — Syllabus Document RAG & Citation Engine</div>
             <div className="text-xs text-slate-400 mt-1">
-              Implements topic taxonomy selection, Gemini AI service wrapper, conversational tutor prompts, multi-turn explanation flows, and chat persistence.
+              Implements lecture notes and course document ingestion (PDF, DOCX, TXT), text chunking, retrieval context injection, and verified citation references.
             </div>
           </div>
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-300 px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/30">
-            Awaiting Approval Gate <ArrowRight className="w-3.5 h-3.5" />
+            Phase 4 Ready <ArrowRight className="w-3.5 h-3.5" />
           </div>
         </div>
       </main>
@@ -364,7 +407,7 @@ function MainDashboard() {
 export default function App() {
   return (
     <AuthProvider>
-      <MainDashboard />
+      <MainApp />
     </AuthProvider>
   );
 }
