@@ -163,8 +163,8 @@ export const QuizModal: React.FC<QuizModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white tracking-tight">Adaptive Diagnostic Quizzing</h2>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-wider">
-                  Phase 5 Formative
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 uppercase tracking-wider">
+                  Adaptive Assessment
                 </span>
               </div>
               <p className="text-xs text-slate-400">
@@ -290,7 +290,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Generating Questions with Gemini...</span>
+                    <span>Generating Adaptive Questions...</span>
                   </>
                 ) : (
                   <>

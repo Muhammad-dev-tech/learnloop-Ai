@@ -145,8 +145,8 @@ export const DocumentLibraryModal: React.FC<DocumentLibraryModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white tracking-tight">Syllabus & Lecture Notes RAG Engine</h2>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 uppercase tracking-wider">
-                  Phase 4 RAG
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 uppercase tracking-wider">
+                  Course Knowledge Base
                 </span>
               </div>
               <p className="text-xs text-slate-400">
