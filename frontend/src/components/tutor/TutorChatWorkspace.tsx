@@ -12,7 +12,8 @@ import {
   User, 
   ArrowLeft,
   Clock,
-  Zap
+  Zap,
+  Award
 } from 'lucide-react';
 import { LearningSession, SessionDetail, Message, LearningMode, DifficultyLevel } from '../../types/session';
 import { Topic } from '../../types/academic';
@@ -26,6 +27,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { TopicSelectorModal } from './TopicSelectorModal';
 import { DocumentLibraryModal } from '../documents/DocumentLibraryModal';
+import { QuizModal } from '../assessment/QuizModal';
 
 interface TutorChatWorkspaceProps {
   onBackToDashboard?: () => void;
@@ -48,6 +50,7 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [docsModalOpen, setDocsModalOpen] = useState(false);
+  const [quizModalOpen, setQuizModalOpen] = useState(false);
   const [attachedDoc, setAttachedDoc] = useState<Document | null>(null);
   const [creatingSession, setCreatingSession] = useState(false);
   const [suggestedFollowups, setSuggestedFollowups] = useState<string[]>([]);
@@ -368,6 +371,15 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setQuizModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-medium transition-all"
+              title="Practice Formative Quiz"
+            >
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Practice Quiz</span>
+            </button>
+
+            <button
               onClick={() => setDocsModalOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-all"
               title="Course Syllabus Documents (RAG Engine)"
@@ -551,6 +563,13 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
           setAttachedDoc(doc);
           setInputText(`Based on my uploaded course syllabus "${doc.filename}", what are the core learning objectives and concepts covered?`);
         }}
+      />
+
+      {/* Diagnostic Practice Quiz Modal */}
+      <QuizModal
+        isOpen={quizModalOpen}
+        onClose={() => setQuizModalOpen(false)}
+        defaultTopicId={activeSession?.topic_id}
       />
     </div>
   );

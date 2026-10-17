@@ -17,12 +17,14 @@ import {
   UserPlus,
   MessageSquare,
   Compass,
-  FileText
+  FileText,
+  Award
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
 import { TutorChatWorkspace } from './components/tutor/TutorChatWorkspace';
 import { DocumentLibraryModal } from './components/documents/DocumentLibraryModal';
+import { QuizModal } from './components/assessment/QuizModal';
 
 interface HealthData {
   status: string;
@@ -52,6 +54,7 @@ function MainApp() {
   const [lastChecked, setLastChecked] = useState<string>('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [docsModalOpen, setDocsModalOpen] = useState(false);
+  const [quizModalOpen, setQuizModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   const { user, logout } = useAuth();
@@ -115,7 +118,22 @@ function MainApp() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Diagnostic Quizzes Button */}
+            <button
+              onClick={() => {
+                if (user) {
+                  setQuizModalOpen(true);
+                } else {
+                  openAuth('login');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-medium transition-all"
+            >
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span>Diagnostic Quizzes</span>
+            </button>
+
             {/* Syllabus Docs Button */}
             <button
               onClick={() => {
@@ -395,14 +413,14 @@ function MainApp() {
         {/* Milestone Tracker */}
         <div className="border border-brand-500/20 bg-brand-500/5 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="text-xs uppercase font-semibold tracking-wider text-cyan-400">Next Upcoming Milestone</div>
-            <div className="text-base font-semibold text-white mt-0.5">Phase 5 — Automated Formative Assessment & Dynamic Quizzing</div>
+            <div className="text-xs uppercase font-semibold tracking-wider text-amber-400">Next Final Milestone</div>
+            <div className="text-base font-semibold text-white mt-0.5">Phase 6 — Student Knowledge Tracing, Analytics & Defense Polish</div>
             <div className="text-xs text-slate-400 mt-1">
-              Implements automated quiz question generation from topic taxonomy & syllabus documents, real-time submission grading, diagnostic feedback, and difficulty calibration.
+              Implements longitudinal student mastery tracking per topic, weakness detection, dynamic remediation recommendations, and unified defense presentation dashboard.
             </div>
           </div>
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-300 px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/30">
-            Phase 5 Ready <ArrowRight className="w-3.5 h-3.5" />
+            Phase 6 Ready <ArrowRight className="w-3.5 h-3.5" />
           </div>
         </div>
       </main>
@@ -426,6 +444,12 @@ function MainApp() {
         onSelectDocumentForChat={() => {
           setCurrentView('tutor');
         }}
+      />
+
+      {/* Diagnostic Quiz Modal */}
+      <QuizModal
+        isOpen={quizModalOpen}
+        onClose={() => setQuizModalOpen(false)}
       />
     </div>
   );
