@@ -1,4 +1,5 @@
 import { Document, DocumentDetail, DocumentQueryResponse } from '../types/document';
+import { API_BASE_URL } from './config';
 
 export async function uploadDocument(file: File, token?: string | null): Promise<Document> {
   const formData = new FormData();
@@ -9,7 +10,7 @@ export async function uploadDocument(file: File, token?: string | null): Promise
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/documents/upload', {
+  const res = await fetch(`${API_BASE_URL}/api/documents/upload`, {
     method: 'POST',
     headers,
     body: formData,
@@ -29,7 +30,7 @@ export async function fetchDocuments(token?: string | null): Promise<Document[]>
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/documents/', { headers });
+  const res = await fetch(`${API_BASE_URL}/api/documents/`, { headers });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.detail || 'Failed to fetch syllabus documents');
@@ -44,7 +45,7 @@ export async function fetchDocumentDetail(id: number, token?: string | null): Pr
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api/documents/${id}`, { headers });
+  const res = await fetch(`${API_BASE_URL}/api/documents/${id}`, { headers });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.detail || `Failed to fetch document #${id}`);
@@ -59,7 +60,7 @@ export async function deleteDocument(id: number, token?: string | null): Promise
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api/documents/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/api/documents/${id}`, {
     method: 'DELETE',
     headers,
   });
@@ -83,7 +84,7 @@ export async function queryDocumentRAG(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api/documents/${documentId}/query`, {
+  const res = await fetch(`${API_BASE_URL}/api/documents/${documentId}/query`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ query, top_k: topK }),

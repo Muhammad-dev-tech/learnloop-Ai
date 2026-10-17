@@ -5,6 +5,7 @@ import {
   LearningMode, 
   DifficultyLevel 
 } from '../types/session';
+import { API_BASE_URL } from './config';
 
 export interface CreateSessionParams {
   topic_id: number;
@@ -21,7 +22,7 @@ export async function createSession(params: CreateSessionParams, token?: string 
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/sessions/', {
+  const res = await fetch(`${API_BASE_URL}/api/sessions/`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -46,7 +47,7 @@ export async function fetchUserSessions(token?: string | null): Promise<Learning
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/sessions/', { headers });
+  const res = await fetch(`${API_BASE_URL}/api/sessions/`, { headers });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.detail || 'Failed to fetch user learning sessions');
@@ -61,7 +62,7 @@ export async function fetchSessionDetail(sessionId: number, token?: string | nul
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api/sessions/${sessionId}`, { headers });
+  const res = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}`, { headers });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.detail || `Failed to fetch session #${sessionId}`);
@@ -83,7 +84,7 @@ export async function sendMessageToTutor(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api/sessions/${sessionId}/messages`, {
+  const res = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}/messages`, {
     method: 'POST',
     headers,
     body: JSON.stringify({

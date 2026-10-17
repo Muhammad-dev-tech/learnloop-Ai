@@ -1,4 +1,5 @@
 import { StudentMasterySummary } from '../types/progress';
+import { API_BASE_URL } from './config';
 
 export async function fetchMasterySummary(
   token?: string | null
@@ -10,7 +11,7 @@ export async function fetchMasterySummary(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/progress/summary', {
+  const res = await fetch(`${API_BASE_URL}/api/progress/summary`, {
     method: 'GET',
     headers,
   });
@@ -34,7 +35,7 @@ export async function dismissRecommendation(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`/api/progress/recommendations/${recId}/dismiss`, {
+  const res = await fetch(`${API_BASE_URL}/api/progress/recommendations/${recId}/dismiss`, {
     method: 'POST',
     headers,
   });

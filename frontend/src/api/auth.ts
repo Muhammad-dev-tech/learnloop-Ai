@@ -1,6 +1,7 @@
 import { AuthResponse, LoginCredentials, RegisterCredentials, User } from '../types/auth';
+import { API_BASE_URL } from './config';
 
-const API_BASE = '/api/auth';
+const API_BASE = `${API_BASE_URL}/api/auth`;
 
 export async function registerStudent(credentials: RegisterCredentials): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE}/register`, {

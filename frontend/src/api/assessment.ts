@@ -5,6 +5,7 @@ import {
   StudentAssessmentStats 
 } from '../types/assessment';
 import { DifficultyLevel } from '../types/session';
+import { API_BASE_URL } from './config';
 
 export interface GenerateQuizParams {
   topic_id: number;
@@ -24,7 +25,7 @@ export async function generateQuiz(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/assessment/generate', {
+  const res = await fetch(`${API_BASE_URL}/api/assessment/generate`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -56,7 +57,7 @@ export async function submitQuizAnswer(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/assessment/submit', {
+  const res = await fetch(`${API_BASE_URL}/api/assessment/submit`, {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -80,7 +81,7 @@ export async function fetchQuizHistory(token?: string | null): Promise<QuizAttem
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/assessment/history', { headers });
+  const res = await fetch(`${API_BASE_URL}/api/assessment/history`, { headers });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.detail || 'Failed to fetch assessment history');
@@ -95,7 +96,7 @@ export async function fetchAssessmentStats(token?: string | null): Promise<Stude
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch('/api/assessment/stats', { headers });
+  const res = await fetch(`${API_BASE_URL}/api/assessment/stats`, { headers });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.detail || 'Failed to fetch student assessment statistics');
