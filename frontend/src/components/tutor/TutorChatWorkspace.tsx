@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { LearningSession, SessionDetail, Message, LearningMode, DifficultyLevel } from '../../types/session';
 import { Topic } from '../../types/academic';
+import { Document } from '../../types/document';
 import { 
   createSession, 
   fetchUserSessions, 
@@ -24,6 +25,7 @@ import {
 } from '../../api/sessions';
 import { useAuth } from '../../context/AuthContext';
 import { TopicSelectorModal } from './TopicSelectorModal';
+import { DocumentLibraryModal } from '../documents/DocumentLibraryModal';
 
 interface TutorChatWorkspaceProps {
   onBackToDashboard?: () => void;
@@ -45,6 +47,8 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
   const [isSending, setIsSending] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [docsModalOpen, setDocsModalOpen] = useState(false);
+  const [attachedDoc, setAttachedDoc] = useState<Document | null>(null);
   const [creatingSession, setCreatingSession] = useState(false);
   const [suggestedFollowups, setSuggestedFollowups] = useState<string[]>([]);
   const [currentMode, setCurrentMode] = useState<LearningMode>('tutor');
@@ -229,13 +233,23 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
               <span>Study Sessions</span>
             </div>
           </div>
-          <button
-            onClick={() => setSelectorOpen(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm transition-all"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>New</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setDocsModalOpen(true)}
+              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors"
+              title="Manage Syllabus Documents"
+            >
+              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Docs</span>
+            </button>
+            <button
+              onClick={() => setSelectorOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold shadow-sm transition-all"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>New</span>
+            </button>
+          </div>
         </div>
 
         {/* Sessions List */}
@@ -352,12 +366,28 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
             })}
           </div>
 
-          <button
-            onClick={() => setSelectorOpen(true)}
-            className="md:hidden p-2 rounded-lg bg-brand-600 text-white text-xs font-semibold"
-          >
-            <PlusCircle className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setDocsModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-all"
+              title="Course Syllabus Documents (RAG Engine)"
+            >
+              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden sm:inline">Syllabus RAG</span>
+              {attachedDoc && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold">
+                  Grounded
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setSelectorOpen(true)}
+              className="md:hidden p-2 rounded-lg bg-brand-600 text-white text-xs font-semibold"
+            >
+              <PlusCircle className="w-4 h-4" />
+            </button>
+          </div>
         </header>
 
         {/* Message Stream */}
@@ -511,6 +541,16 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
         onClose={() => setSelectorOpen(false)}
         onSelectTopic={handleCreateSession}
         isLoading={creatingSession}
+      />
+
+      {/* Document & Syllabus Library Modal */}
+      <DocumentLibraryModal
+        isOpen={docsModalOpen}
+        onClose={() => setDocsModalOpen(false)}
+        onSelectDocumentForChat={(doc) => {
+          setAttachedDoc(doc);
+          setInputText(`Based on my uploaded course syllabus "${doc.filename}", what are the core learning objectives and concepts covered?`);
+        }}
       />
     </div>
   );

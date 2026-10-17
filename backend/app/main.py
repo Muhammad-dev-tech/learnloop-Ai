@@ -9,6 +9,7 @@ from app.core.seed import seed_curriculum_if_empty
 from app.routers.auth import router as auth_router
 from app.routers.academic import router as academic_router
 from app.routers.sessions import router as sessions_router
+from app.routers.documents import router as documents_router
 import os
 from pathlib import Path
 
@@ -48,6 +49,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(academic_router)
 app.include_router(sessions_router)
+app.include_router(documents_router)
 
 
 @app.get("/", tags=["Root"])

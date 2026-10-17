@@ -48,6 +48,7 @@ frontend/node_modules/
 backend/learnloop.db*
 backend/app/storage/uploads/*
 !backend/app/storage/uploads/.gitkeep
+storage/
 
 # Build artifacts
 frontend/dist/

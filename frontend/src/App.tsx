@@ -16,11 +16,13 @@ import {
   LogIn, 
   UserPlus,
   MessageSquare,
-  Compass
+  Compass,
+  FileText
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
 import { TutorChatWorkspace } from './components/tutor/TutorChatWorkspace';
+import { DocumentLibraryModal } from './components/documents/DocumentLibraryModal';
 
 interface HealthData {
   status: string;
@@ -49,6 +51,7 @@ function MainApp() {
   const [error, setError] = useState<string | null>(null);
   const [lastChecked, setLastChecked] = useState<string>('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [docsModalOpen, setDocsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   const { user, logout } = useAuth();
@@ -106,13 +109,28 @@ function MainApp() {
               <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 LearnLoop AI
               </span>
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                Phase 3: AI Tutor Online
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium">
+                Phase 4: Syllabus RAG Online
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Syllabus Docs Button */}
+            <button
+              onClick={() => {
+                if (user) {
+                  setDocsModalOpen(true);
+                } else {
+                  openAuth('login');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition-all"
+            >
+              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Syllabus Docs</span>
+            </button>
+
             {/* Direct Switch to Tutor Workspace */}
             <button
               onClick={handleLaunchTutor}
@@ -377,14 +395,14 @@ function MainApp() {
         {/* Milestone Tracker */}
         <div className="border border-brand-500/20 bg-brand-500/5 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="text-xs uppercase font-semibold tracking-wider text-brand-400">Next Upcoming Milestone</div>
-            <div className="text-base font-semibold text-white mt-0.5">Phase 4 — Syllabus Document RAG & Citation Engine</div>
+            <div className="text-xs uppercase font-semibold tracking-wider text-cyan-400">Next Upcoming Milestone</div>
+            <div className="text-base font-semibold text-white mt-0.5">Phase 5 — Automated Formative Assessment & Dynamic Quizzing</div>
             <div className="text-xs text-slate-400 mt-1">
-              Implements lecture notes and course document ingestion (PDF, DOCX, TXT), text chunking, retrieval context injection, and verified citation references.
+              Implements automated quiz question generation from topic taxonomy & syllabus documents, real-time submission grading, diagnostic feedback, and difficulty calibration.
             </div>
           </div>
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-300 px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/30">
-            Phase 4 Ready <ArrowRight className="w-3.5 h-3.5" />
+            Phase 5 Ready <ArrowRight className="w-3.5 h-3.5" />
           </div>
         </div>
       </main>
@@ -399,6 +417,15 @@ function MainApp() {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultMode={authMode}
+      />
+
+      {/* Document & Syllabus Library Modal */}
+      <DocumentLibraryModal
+        isOpen={docsModalOpen}
+        onClose={() => setDocsModalOpen(false)}
+        onSelectDocumentForChat={() => {
+          setCurrentView('tutor');
+        }}
       />
     </div>
   );
