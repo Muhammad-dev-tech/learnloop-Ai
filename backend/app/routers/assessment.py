@@ -19,6 +19,7 @@ from app.schemas.assessment import (
     StudentAssessmentStats
 )
 from app.services.assessment_engine import generate_quiz_questions, evaluate_answer
+from app.services.knowledge_tracer import update_student_mastery
 
 router = APIRouter(prefix="/api/assessment", tags=["Automated Formative Assessment & Quizzing"])
 
@@ -151,6 +152,16 @@ async def submit_quiz_answer(
     db.add(attempt)
     await db.commit()
     await db.refresh(attempt)
+
+    # Automatically update longitudinal knowledge tracing mastery & recommendations
+    if question.topic_id:
+        await update_student_mastery(
+            db=db,
+            user_id=current_user.id,
+            topic_id=question.topic_id,
+            is_correct=eval_result["is_correct"],
+            misconception_tag=eval_result["misconception_tag"]
+        )
 
     return SubmitAnswerResponse(
         attempt_id=attempt.id,

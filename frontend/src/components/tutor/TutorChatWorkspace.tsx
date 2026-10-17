@@ -13,7 +13,8 @@ import {
   ArrowLeft,
   Clock,
   Zap,
-  Award
+  Award,
+  TrendingUp
 } from 'lucide-react';
 import { LearningSession, SessionDetail, Message, LearningMode, DifficultyLevel } from '../../types/session';
 import { Topic } from '../../types/academic';
@@ -28,6 +29,7 @@ import { useAuth } from '../../context/AuthContext';
 import { TopicSelectorModal } from './TopicSelectorModal';
 import { DocumentLibraryModal } from '../documents/DocumentLibraryModal';
 import { QuizModal } from '../assessment/QuizModal';
+import { StudentMasteryDashboard } from '../analytics/StudentMasteryDashboard';
 
 interface TutorChatWorkspaceProps {
   onBackToDashboard?: () => void;
@@ -51,6 +53,7 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [docsModalOpen, setDocsModalOpen] = useState(false);
   const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [masteryModalOpen, setMasteryModalOpen] = useState(false);
   const [attachedDoc, setAttachedDoc] = useState<Document | null>(null);
   const [creatingSession, setCreatingSession] = useState(false);
   const [suggestedFollowups, setSuggestedFollowups] = useState<string[]>([]);
@@ -371,6 +374,15 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setMasteryModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-medium transition-all"
+              title="Student Knowledge Tracing & Analytics"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">Analytics</span>
+            </button>
+
+            <button
               onClick={() => setQuizModalOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-medium transition-all"
               title="Practice Formative Quiz"
@@ -570,6 +582,16 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
         isOpen={quizModalOpen}
         onClose={() => setQuizModalOpen(false)}
         defaultTopicId={activeSession?.topic_id}
+      />
+
+      {/* Student Knowledge Tracing & Mastery Analytics */}
+      <StudentMasteryDashboard
+        isOpen={masteryModalOpen}
+        onClose={() => setMasteryModalOpen(false)}
+        onLaunchQuiz={(_topicId) => {
+          setMasteryModalOpen(false);
+          setQuizModalOpen(true);
+        }}
       />
     </div>
   );

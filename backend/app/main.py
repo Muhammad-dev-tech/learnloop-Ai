@@ -11,6 +11,7 @@ from app.routers.academic import router as academic_router
 from app.routers.sessions import router as sessions_router
 from app.routers.documents import router as documents_router
 from app.routers.assessment import router as assessment_router
+from app.routers.progress import router as progress_router
 import os
 from pathlib import Path
 
@@ -52,6 +53,7 @@ app.include_router(academic_router)
 app.include_router(sessions_router)
 app.include_router(documents_router)
 app.include_router(assessment_router)
+app.include_router(progress_router)
 
 
 @app.get("/", tags=["Root"])

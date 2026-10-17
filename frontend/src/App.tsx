@@ -18,13 +18,15 @@ import {
   MessageSquare,
   Compass,
   FileText,
-  Award
+  Award,
+  TrendingUp
 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
 import { TutorChatWorkspace } from './components/tutor/TutorChatWorkspace';
 import { DocumentLibraryModal } from './components/documents/DocumentLibraryModal';
 import { QuizModal } from './components/assessment/QuizModal';
+import { StudentMasteryDashboard } from './components/analytics/StudentMasteryDashboard';
 
 interface HealthData {
   status: string;
@@ -55,6 +57,7 @@ function MainApp() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [docsModalOpen, setDocsModalOpen] = useState(false);
   const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [masteryModalOpen, setMasteryModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   const { user, logout } = useAuth();
@@ -112,13 +115,28 @@ function MainApp() {
               <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                 LearnLoop AI
               </span>
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium">
-                Phase 4: Syllabus RAG Online
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                Phase 6: Full Defense Suite Complete
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* Mastery & Defense Analytics Button */}
+            <button
+              onClick={() => {
+                if (user) {
+                  setMasteryModalOpen(true);
+                } else {
+                  openAuth('login');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-medium transition-all"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Mastery & Analytics</span>
+            </button>
+
             {/* Diagnostic Quizzes Button */}
             <button
               onClick={() => {
@@ -410,18 +428,34 @@ function MainApp() {
           )}
         </div>
 
-        {/* Milestone Tracker */}
-        <div className="border border-brand-500/20 bg-brand-500/5 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Milestone Tracker - Completed All 6 Phases */}
+        <div className="border border-emerald-500/30 bg-emerald-500/5 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="text-xs uppercase font-semibold tracking-wider text-amber-400">Next Final Milestone</div>
-            <div className="text-base font-semibold text-white mt-0.5">Phase 6 — Student Knowledge Tracing, Analytics & Defense Polish</div>
-            <div className="text-xs text-slate-400 mt-1">
-              Implements longitudinal student mastery tracking per topic, weakness detection, dynamic remediation recommendations, and unified defense presentation dashboard.
+            <div className="text-xs uppercase font-semibold tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              All 6 Phases Fully Operational • Academic Defense Ready
+            </div>
+            <div className="text-base font-semibold text-white mt-1">
+              LearnLoop AI Adaptive Tutoring & Knowledge Tracing Architecture
+            </div>
+            <div className="text-xs text-slate-400 mt-1 max-w-2xl">
+              Complete end-to-end integration: Multi-student isolation, 12-table schema, Socratic Gemini 3.8 Flash tutoring, grounded syllabus RAG citations, formative assessments, and Bayesian-inspired knowledge tracing.
             </div>
           </div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-300 px-3 py-1.5 rounded-lg bg-brand-500/10 border border-brand-500/30">
-            Phase 6 Ready <ArrowRight className="w-3.5 h-3.5" />
-          </div>
+          <button
+            onClick={() => {
+              if (user) {
+                setMasteryModalOpen(true);
+              } else {
+                openAuth('login');
+              }
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all shrink-0"
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span>Open Defense Analytics</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </main>
 
@@ -450,6 +484,20 @@ function MainApp() {
       <QuizModal
         isOpen={quizModalOpen}
         onClose={() => setQuizModalOpen(false)}
+      />
+
+      {/* Student Mastery & Defense Dashboard */}
+      <StudentMasteryDashboard
+        isOpen={masteryModalOpen}
+        onClose={() => setMasteryModalOpen(false)}
+        onLaunchTutor={() => {
+          setMasteryModalOpen(false);
+          setCurrentView('tutor');
+        }}
+        onLaunchQuiz={() => {
+          setMasteryModalOpen(false);
+          setQuizModalOpen(true);
+        }}
       />
     </div>
   );
