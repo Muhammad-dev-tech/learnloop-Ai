@@ -1,5 +1,5 @@
 import { AuthResponse, LoginCredentials, RegisterCredentials, User } from '../types/auth';
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, parseApiResponse } from './config';
 
 const API_BASE = `${API_BASE_URL}/api/auth`;
 
@@ -10,11 +10,7 @@ export async function registerStudent(credentials: RegisterCredentials): Promise
     body: JSON.stringify(credentials),
   });
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.detail || 'Registration failed');
-  }
-  return data;
+  return parseApiResponse<AuthResponse>(res, 'Registration failed');
 }
 
 export async function loginStudent(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -24,11 +20,7 @@ export async function loginStudent(credentials: LoginCredentials): Promise<AuthR
     body: JSON.stringify(credentials),
   });
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.detail || 'Login failed');
-  }
-  return data;
+  return parseApiResponse<AuthResponse>(res, 'Login failed');
 }
 
 export async function logoutStudent(): Promise<void> {
@@ -48,9 +40,5 @@ export async function fetchCurrentUser(token?: string | null): Promise<User> {
     headers,
   });
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.detail || 'Failed to fetch current user profile');
-  }
-  return data;
+  return parseApiResponse<User>(res, 'Failed to fetch current user profile');
 }
