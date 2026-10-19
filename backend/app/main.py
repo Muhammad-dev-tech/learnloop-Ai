@@ -57,7 +57,7 @@ app.include_router(assessment_router)
 app.include_router(progress_router)
 
 
-@app.get("/", tags=["Root"])
+@app.api_route("/", methods=["GET", "HEAD"], tags=["Root"])
 async def root():
     return {
         "app": settings.PROJECT_NAME,
@@ -66,7 +66,7 @@ async def root():
         "docs": "/api/docs"
     }
 
-@app.get("/api/health", tags=["System"])
+@app.api_route("/api/health", methods=["GET", "HEAD"], tags=["System"])
 async def health_check():
     """System health check endpoint verifying database connectivity and configuration."""
     db_status = await check_database_connection()
