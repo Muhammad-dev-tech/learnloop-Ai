@@ -5,10 +5,14 @@ import {
   StudentAssessmentStats 
 } from '../types/assessment';
 import { DifficultyLevel } from '../types/session';
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, parseApiResponse } from './config';
+
+function getAuthToken(token?: string | null): string | null {
+  return token || localStorage.getItem('learnloop_token');
+}
 
 export interface GenerateQuizParams {
-  topic_id: number;
+  topic_id?: number;
   difficulty?: DifficultyLevel;
   count?: number;
   document_id?: number;
@@ -18,11 +22,12 @@ export async function generateQuiz(
   params: GenerateQuizParams,
   token?: string | null
 ): Promise<Question[]> {
+  const authToken = getAuthToken(token);
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
   }
 
   const res = await fetch(`${API_BASE_URL}/api/assessment/generate`, {
@@ -36,12 +41,7 @@ export async function generateQuiz(
     }),
   });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || 'Failed to generate quiz questions');
-  }
-
-  return res.json();
+  return parseApiResponse<Question[]>(res, 'Failed to generate quiz questions');
 }
 
 export async function submitQuizAnswer(
@@ -50,11 +50,12 @@ export async function submitQuizAnswer(
   sessionId?: number,
   token?: string | null
 ): Promise<SubmitAnswerResponse> {
+  const authToken = getAuthToken(token);
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
   }
 
   const res = await fetch(`${API_BASE_URL}/api/assessment/submit`, {
@@ -67,40 +68,27 @@ export async function submitQuizAnswer(
     }),
   });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || 'Failed to submit quiz answer');
-  }
-
-  return res.json();
+  return parseApiResponse<SubmitAnswerResponse>(res, 'Failed to submit quiz answer');
 }
 
 export async function fetchQuizHistory(token?: string | null): Promise<QuizAttempt[]> {
+  const authToken = getAuthToken(token);
   const headers: Record<string, string> = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
   }
 
   const res = await fetch(`${API_BASE_URL}/api/assessment/history`, { headers });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || 'Failed to fetch assessment history');
-  }
-
-  return res.json();
+  return parseApiResponse<QuizAttempt[]>(res, 'Failed to fetch assessment history');
 }
 
 export async function fetchAssessmentStats(token?: string | null): Promise<StudentAssessmentStats> {
+  const authToken = getAuthToken(token);
   const headers: Record<string, string> = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
   }
 
   const res = await fetch(`${API_BASE_URL}/api/assessment/stats`, { headers });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || 'Failed to fetch student assessment statistics');
-  }
-
-  return res.json();
+  return parseApiResponse<StudentAssessmentStats>(res, 'Failed to fetch student assessment statistics');
 }

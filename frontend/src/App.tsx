@@ -427,6 +427,7 @@ function MainApp() {
       <DocumentLibraryModal
         isOpen={docsModalOpen}
         onClose={() => setDocsModalOpen(false)}
+        onOpenAuth={() => openAuth('login')}
         onSelectDocumentForChat={() => {
           setCurrentView('tutor');
         }}

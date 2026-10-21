@@ -21,7 +21,6 @@ import {
   X
 } from 'lucide-react';
 import { LearningSession, SessionDetail, Message, LearningMode, DifficultyLevel } from '../../types/session';
-import { Topic } from '../../types/academic';
 import { Document } from '../../types/document';
 import { 
   createSession, 
@@ -31,7 +30,7 @@ import {
 } from '../../api/sessions';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { TopicSelectorModal } from './TopicSelectorModal';
+import { TopicSelectorModal, StudyTarget } from './TopicSelectorModal';
 import { DocumentLibraryModal } from '../documents/DocumentLibraryModal';
 import { QuizModal } from '../assessment/QuizModal';
 import { StudentMasteryDashboard } from '../analytics/StudentMasteryDashboard';
@@ -122,12 +121,13 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
     }
   };
 
-  const handleCreateSession = async (topic: Topic, mode: LearningMode, difficulty: DifficultyLevel) => {
+  const handleCreateSession = async (target: StudyTarget, mode: LearningMode, difficulty: DifficultyLevel) => {
     setCreatingSession(true);
     try {
       const newSession = await createSession(
         {
-          topic_id: topic.id,
+          topic_id: target.topic?.id,
+          document_id: target.document?.id,
           learning_mode: mode,
           current_difficulty: difficulty,
         },
@@ -679,7 +679,7 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({ onBackTo
       <TopicSelectorModal
         isOpen={selectorOpen}
         onClose={() => setSelectorOpen(false)}
-        onSelectTopic={handleCreateSession}
+        onSelectTarget={handleCreateSession}
         isLoading={creatingSession}
       />
 

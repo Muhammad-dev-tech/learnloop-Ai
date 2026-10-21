@@ -33,7 +33,8 @@ class ConversationRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class SessionCreate(BaseModel):
-    topic_id: int = Field(..., description="The ID of the topic to study")
+    topic_id: Optional[int] = Field(default=None, description="The ID of the topic to study")
+    document_id: Optional[int] = Field(default=None, description="The ID of an uploaded document to study")
     session_type: str = Field(default="topic", description="'topic', 'document', or 'challenge'")
     current_difficulty: str = Field(default="beginner", description="'beginner', 'intermediate', or 'advanced'")
     learning_mode: str = Field(default="tutor", description="'tutor', 'teach_me', 'challenge', or 'notes'")

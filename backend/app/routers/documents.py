@@ -27,6 +27,7 @@ from app.services.rag_retriever import query_document_rag
 router = APIRouter(prefix="/api/documents", tags=["Syllabus & Document RAG"])
 
 @router.post("/upload", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
+@router.post("/upload/", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
 async def upload_document(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
@@ -89,6 +90,7 @@ async def upload_document(
             detail=f"Error parsing and processing document: {str(e)}"
         )
 
+@router.get("", response_model=List[DocumentRead])
 @router.get("/", response_model=List[DocumentRead])
 async def list_documents(
     current_user: User = Depends(get_current_user),

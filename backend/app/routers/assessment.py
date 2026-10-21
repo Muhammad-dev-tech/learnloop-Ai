@@ -24,30 +24,29 @@ from app.services.knowledge_tracer import update_student_mastery
 router = APIRouter(prefix="/api/assessment", tags=["Automated Formative Assessment & Quizzing"])
 
 @router.post("/generate", response_model=List[QuestionStudentRead], status_code=status.HTTP_201_CREATED)
+@router.post("/generate/", response_model=List[QuestionStudentRead], status_code=status.HTTP_201_CREATED)
 async def generate_quiz(
     payload: GenerateQuizRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Dynamically generates curriculum-aligned diagnostic quiz questions for a topic.
+    Dynamically generates curriculum-aligned or document-grounded diagnostic quiz questions.
     Stores the questions server-side and returns them without revealing correct answers.
     """
-    topic_query = (
-        select(Topic)
-        .options(selectinload(Topic.learning_objectives))
-        .where(Topic.id == payload.topic_id)
-    )
-    topic_res = await db.execute(topic_query)
-    topic = topic_res.scalars().first()
-    if not topic:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Topic with ID {payload.topic_id} not found."
+    topic = None
+    if payload.topic_id:
+        topic_query = (
+            select(Topic)
+            .options(selectinload(Topic.learning_objectives))
+            .where(Topic.id == payload.topic_id)
         )
+        topic_res = await db.execute(topic_query)
+        topic = topic_res.scalars().first()
 
     # Optional syllabus document grounding context
     doc_context = None
+    doc_title = None
     if payload.document_id:
         doc_query = (
             select(Document)
@@ -56,31 +55,51 @@ async def generate_quiz(
         )
         doc_res = await db.execute(doc_query)
         doc = doc_res.scalars().first()
-        if doc and doc.chunks:
-            doc_context = "\n".join([c.content for c in doc.chunks[:5]])
+        if doc:
+            doc_title = doc.filename
+            if doc.chunks:
+                doc_context = "\n".join([c.content for c in doc.chunks[:8]])
 
-    objectives = [o.objective_text for o in topic.learning_objectives]
+    # If neither specific topic nor document was found, fallback to first available topic
+    if not topic and not doc_context:
+        first_topic = await db.execute(
+            select(Topic).options(selectinload(Topic.learning_objectives)).limit(1)
+        )
+        topic = first_topic.scalars().first()
+        if not topic:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No topic or document available for quiz generation."
+            )
 
-    # Generate questions via Gemini (or educational fallback)
+    topic_name = topic.name if topic else (doc_title or "Uploaded Course Notes")
+    objectives = [o.objective_text for o in topic.learning_objectives] if topic else [f"Course content from {doc_title}"]
+    topic_id_val = topic.id if topic else None
+
+    # Generate questions via dynamic synthesizer (with Gemini AI fallback support)
     raw_questions = await generate_quiz_questions(
-        topic_name=topic.name,
+        topic_name=topic_name,
         objectives=objectives,
         difficulty=payload.difficulty or "intermediate",
-        count=payload.count or 4,
+        count=payload.count or 5,
         document_context=doc_context
     )
 
     created_questions = []
     for q_data in raw_questions:
         q_obj = Question(
-            topic_id=topic.id,
+            topic_id=topic_id_val,
             question_type=q_data.get("question_type", "multiple_choice"),
             question_text=q_data["question_text"],
             options=q_data.get("options", []),
             correct_answer=q_data["correct_answer"],
             explanation=q_data["explanation"],
             difficulty=payload.difficulty or "intermediate",
-            source_metadata={"misconception_tag": q_data.get("misconception_tag")}
+            source_metadata={
+                "misconception_tag": q_data.get("misconception_tag"),
+                "document_id": payload.document_id,
+                "document_title": doc_title
+            }
         )
         db.add(q_obj)
         created_questions.append(q_obj)

@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.models.academic import Topic, Subject, LearningObjective
+from app.models.document import Document
 from app.models.session import LearningSession, Conversation, Message
 from app.schemas.session import (
     SessionCreate,
@@ -22,6 +23,7 @@ from app.services.ai_tutor import generate_tutor_response
 
 router = APIRouter(prefix="/api/sessions", tags=["Learning Sessions & AI Tutor"])
 
+@router.post("", response_model=SessionDetailRead, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=SessionDetailRead, status_code=status.HTTP_201_CREATED)
 async def create_session(
     payload: SessionCreate,
@@ -29,28 +31,49 @@ async def create_session(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Initiates a new isolated learning session on a specific topic.
+    Initiates a new isolated learning session on a specific topic or uploaded course document.
     Automatically generates a conversation and initial introductory pedagogical greeting from the AI tutor.
     """
-    # Verify topic exists
-    topic_query = (
-        select(Topic)
-        .options(selectinload(Topic.subject), selectinload(Topic.learning_objectives))
-        .where(Topic.id == payload.topic_id)
-    )
-    topic_res = await db.execute(topic_query)
-    topic = topic_res.scalars().first()
-    if not topic:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Topic with ID {payload.topic_id} not found."
+    topic = None
+    doc = None
+
+    if payload.topic_id and payload.topic_id > 0:
+        topic_query = (
+            select(Topic)
+            .options(selectinload(Topic.subject), selectinload(Topic.learning_objectives))
+            .where(Topic.id == payload.topic_id)
         )
+        topic_res = await db.execute(topic_query)
+        topic = topic_res.scalars().first()
+
+    if payload.document_id:
+        doc_query = select(Document).options(selectinload(Document.chunks)).where(
+            Document.id == payload.document_id, Document.user_id == current_user.id
+        )
+        doc_res = await db.execute(doc_query)
+        doc = doc_res.scalars().first()
+
+    if not topic and not doc:
+        first_topic = await db.execute(
+            select(Topic).options(selectinload(Topic.subject), selectinload(Topic.learning_objectives)).limit(1)
+        )
+        topic = first_topic.scalars().first()
+        if not topic:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No curriculum topic or document available to initiate learning session."
+            )
+
+    topic_id_val = topic.id if topic else None
+    topic_name = topic.name if topic else (doc.filename if doc else "Course Notes")
+    subject_name = topic.subject.name if (topic and topic.subject) else "Uploaded Course Notes"
+    session_type = "document" if (doc and not topic) else payload.session_type
 
     # 1. Create LearningSession
     session = LearningSession(
         user_id=current_user.id,
-        topic_id=topic.id,
-        session_type=payload.session_type,
+        topic_id=topic_id_val,
+        session_type=session_type,
         current_difficulty=payload.current_difficulty,
         status="active"
     )
@@ -58,7 +81,7 @@ async def create_session(
     await db.flush()
 
     # 2. Create associated Conversation
-    title = f"{topic.name} ({payload.learning_mode.capitalize()})"
+    title = f"{topic_name} ({payload.learning_mode.capitalize()})"
     conversation = Conversation(
         user_id=current_user.id,
         session_id=session.id,
@@ -69,15 +92,15 @@ async def create_session(
     await db.flush()
 
     # 3. Generate initial welcoming tutor message
-    objectives = [obj.objective_text for obj in topic.learning_objectives]
+    objectives = [obj.objective_text for obj in topic.learning_objectives] if topic else [f"Course content from {topic_name}"]
     welcome_prompt = (
-        f"The student is beginning a new study session on '{topic.name}'. "
+        f"The student is beginning a new study session on '{topic_name}'. "
         f"Selected mode: {payload.learning_mode}, difficulty: {payload.current_difficulty}. "
         f"Introduce yourself warmly as their LearnLoop AI tutor, outline what we will cover, and ask a kick-off question."
     )
     tutor_reply = await generate_tutor_response(
         prompt=welcome_prompt,
-        topic_name=topic.name,
+        topic_name=topic_name,
         learning_mode=payload.learning_mode,
         difficulty=payload.current_difficulty,
         conversation_history=[],
@@ -99,8 +122,8 @@ async def create_session(
         id=session.id,
         user_id=session.user_id,
         topic_id=session.topic_id,
-        topic_name=topic.name,
-        subject_name=topic.subject.name if topic.subject else None,
+        topic_name=topic_name,
+        subject_name=subject_name,
         session_type=session.session_type,
         current_difficulty=session.current_difficulty,
         status=session.status,

@@ -20,7 +20,7 @@ class QuestionDetailRead(QuestionStudentRead):
     misconception_tag: Optional[str] = None
 
 class GenerateQuizRequest(BaseModel):
-    topic_id: int = Field(..., description="Target academic topic ID")
+    topic_id: Optional[int] = Field(default=None, description="Optional target academic topic ID")
     difficulty: Optional[str] = Field(default="intermediate", description="'beginner', 'intermediate', or 'advanced'")
     count: Optional[int] = Field(default=4, ge=1, le=10, description="Number of questions to generate (1-10)")
     document_id: Optional[int] = Field(default=None, description="Optional document ID for syllabus-grounded questions")
