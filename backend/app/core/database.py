@@ -4,19 +4,27 @@ from sqlalchemy import event, text
 from app.core.config import settings
 
 # Engine configuration
+raw_db_url = settings.DATABASE_URL
+if raw_db_url.startswith("postgres://"):
+    db_url = raw_db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif raw_db_url.startswith("postgresql://") and not raw_db_url.startswith("postgresql+asyncpg://"):
+    db_url = raw_db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+else:
+    db_url = raw_db_url
+
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    db_url,
     echo=settings.DEBUG,
     connect_args=connect_args,
     future=True,
 )
 
 # Enable WAL mode and foreign keys on SQLite connections
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     @event.listens_for(engine.sync_engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()

@@ -28,6 +28,7 @@ import {
   fetchSessionDetail, 
   sendMessageToTutor 
 } from '../../api/sessions';
+import { fetchSubjects } from '../../api/academic';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { TopicSelectorModal, StudyTarget } from './TopicSelectorModal';
@@ -188,12 +189,41 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputText;
-    if (!text.trim() || !activeSession || isSending) return;
+    if (!text.trim() || isSending) return;
+
+    let targetSession = activeSession;
+    setIsSending(true);
+
+    // If no active session yet, auto-create one so user is never blocked
+    if (!targetSession) {
+      try {
+        if (attachedDoc) {
+          targetSession = await createSession(
+            { document_id: attachedDoc.id, learning_mode: currentMode, current_difficulty: 'beginner' },
+            token
+          );
+        } else {
+          const subjects = await fetchSubjects().catch(() => []);
+          const firstTopic = subjects[0]?.topics[0];
+          targetSession = await createSession(
+            { topic_id: firstTopic?.id, learning_mode: currentMode, current_difficulty: 'beginner' },
+            token
+          );
+        }
+        setActiveSession(targetSession);
+        setSessions(prev => [targetSession!, ...prev.filter(s => s.id !== targetSession!.id)]);
+      } catch (err) {
+        console.error('Failed to auto-create session for message:', err);
+        setIsSending(false);
+        setSelectorOpen(true);
+        return;
+      }
+    }
 
     // Optimistic user message addition
     const optimisticUserMsg: Message = {
       id: Date.now(),
-      conversation_id: activeSession.conversation_id || 0,
+      conversation_id: targetSession.conversation_id || 0,
       role: 'user',
       content: text.trim(),
       created_at: new Date().toISOString()
@@ -201,11 +231,10 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
 
     setMessages(prev => [...prev, optimisticUserMsg]);
     setInputText('');
-    setIsSending(true);
 
     try {
       const response = await sendMessageToTutor(
-        activeSession.id,
+        targetSession.id,
         text.trim(),
         currentMode,
         token,
@@ -227,7 +256,7 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
         ...prev,
         {
           id: Date.now() + 1,
-          conversation_id: activeSession.conversation_id || 0,
+          conversation_id: targetSession.conversation_id || 0,
           role: 'system',
           content: '⚠️ Failed to deliver message to AI tutor. Please check network connection.',
           created_at: new Date().toISOString()
@@ -453,8 +482,8 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <h1 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
-                    {activeSession ? activeSession.topic_name : 'AI Tutor Workspace'}
+                  <h1 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate whitespace-nowrap">
+                    {activeSession ? activeSession.topic_name : (attachedDoc ? attachedDoc.filename : 'AI Tutor Workspace')}
                   </h1>
                   <button
                     onClick={() => setSelectorOpen(true)}
@@ -464,8 +493,10 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
                     Switch
                   </button>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                  {activeSession?.subject_name ? activeSession.subject_name : 'Socratic Study Companion'}
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate whitespace-nowrap">
+                  {attachedDoc 
+                    ? `Syllabus Grounded • ${attachedDoc.chunk_count} Chunks` 
+                    : (activeSession?.subject_name || 'Adaptive Socratic Assistant')}
                 </p>
               </div>
             </div>
@@ -509,19 +540,19 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
                 )}
               </button>
 
-              {/* Quiz Shortcut */}
+              {/* Quiz Shortcut (desktop only) */}
               <button
                 onClick={() => setQuizModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-300 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+                className="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-300 border border-slate-200 dark:border-slate-700 text-xs font-medium"
               >
                 <Award className="w-3.5 h-3.5 text-amber-500" />
                 <span>Quiz</span>
               </button>
 
-              {/* Analytics Shortcut */}
+              {/* Analytics Shortcut (desktop only) */}
               <button
                 onClick={() => setMasteryModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-brand-600 dark:text-brand-300 border border-slate-200 dark:border-slate-700 text-xs font-medium"
+                className="hidden md:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-brand-600 dark:text-brand-300 border border-slate-200 dark:border-slate-700 text-xs font-medium"
               >
                 <TrendingUp className="w-3.5 h-3.5 text-brand-500" />
                 <span>Progress</span>
@@ -691,7 +722,8 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
               e.preventDefault();
               handleSendMessage();
             }}
-            className="max-w-4xl mx-auto relative flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800 rounded-2xl p-1.5 sm:p-2 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition-all shadow-sm"
+            onClick={() => inputRef.current?.focus()}
+            className="max-w-4xl mx-auto relative flex items-center gap-1.5 sm:gap-2 bg-white dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800 rounded-2xl p-1.5 sm:p-2 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition-all shadow-sm cursor-text"
           >
             <textarea
               ref={inputRef}
@@ -699,18 +731,14 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={isSending || !activeSession}
-              placeholder={
-                activeSession
-                  ? `Ask about ${activeSession.topic_name}...`
-                  : 'Select a course topic to start...'
-              }
+              disabled={isSending}
+              placeholder="Ask a question..."
               className="flex-1 bg-transparent border-0 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-none max-h-32 disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={!inputText.trim() || isSending || !activeSession}
-              className="p-2 sm:p-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white disabled:opacity-40 disabled:hover:bg-brand-600 shadow-sm transition-all shrink-0"
+              disabled={!inputText.trim() || isSending}
+              className="p-2 sm:p-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white disabled:opacity-40 disabled:hover:bg-brand-600 shadow-sm transition-all shrink-0 cursor-pointer"
               title="Send message"
             >
               <Send className="w-4 h-4" />

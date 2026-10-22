@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, User as UserIcon, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Lock, User as UserIcon, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface AuthModalProps {
@@ -22,7 +22,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const { login, register } = useAuth();
 
+  useEffect(() => {
+    if (isOpen) {
+      setIsLogin(defaultMode === 'login');
+      setError(null);
+      const savedEmail = localStorage.getItem('learnloop_saved_email');
+      if (savedEmail && !email) {
+        setEmail(savedEmail);
+      }
+    }
+  }, [isOpen, defaultMode]);
+
   if (!isOpen) return null;
+
+  const handleDemoLogin = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await login({ email: 'student@learnloop.edu', password: 'password123' });
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Demo sign in failed. Please try registering an account.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +59,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       } else {
         await register({ email, password, full_name: fullName });
       }
+      localStorage.setItem('learnloop_saved_email', email);
       onClose();
     } catch (err: any) {
       setError(err.message || 'Authentication failed. Please verify credentials.');
@@ -70,6 +95,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span>{error}</span>
           </div>
         )}
+
+        {/* 1-Tap Demo Student Login */}
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={loading}
+          className="w-full mb-5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-brand-600/10 to-purple-600/10 hover:from-brand-600/20 hover:to-purple-600/20 text-brand-700 dark:text-brand-300 border border-brand-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
+        >
+          <Sparkles className="w-4 h-4 text-brand-500" />
+          <span>One-Tap Demo Student Sign In</span>
+        </button>
+
+        <div className="relative mb-4 flex items-center justify-center">
+          <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
+          <span className="bg-white dark:bg-slate-900 px-2 text-[10px] uppercase font-bold text-slate-400 absolute">
+            Or Use Account
+          </span>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (

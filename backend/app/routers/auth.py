@@ -18,7 +18,8 @@ async def register(
 ):
     """Register a new student account."""
     # Check if user already exists
-    existing_user_query = await db.execute(select(User).where(User.email == user_in.email.lower()))
+    clean_email = user_in.email.lower().strip()
+    existing_user_query = await db.execute(select(User).where(User.email == clean_email))
     if existing_user_query.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -27,7 +28,7 @@ async def register(
 
     # Create new user
     new_user = User(
-        email=user_in.email.lower(),
+        email=clean_email,
         hashed_password=get_password_hash(user_in.password),
         full_name=user_in.full_name.strip(),
         is_active=True
@@ -62,7 +63,8 @@ async def login(
     db: AsyncSession = Depends(get_db)
 ):
     """Authenticate student with email and password."""
-    query = await db.execute(select(User).where(User.email == credentials.email.lower()))
+    clean_email = credentials.email.lower().strip()
+    query = await db.execute(select(User).where(User.email == clean_email))
     user = query.scalar_one_or_none()
 
     if not user or not verify_password(credentials.password, user.hashed_password):
