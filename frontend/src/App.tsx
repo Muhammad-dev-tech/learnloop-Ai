@@ -29,6 +29,7 @@ import { StudentMasteryDashboard } from './components/analytics/StudentMasteryDa
 
 function MainApp() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'tutor'>('dashboard');
+  const [initialDocForTutor, setInitialDocForTutor] = useState<any>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [docsModalOpen, setDocsModalOpen] = useState(false);
   const [quizModalOpen, setQuizModalOpen] = useState(false);
@@ -56,7 +57,15 @@ function MainApp() {
 
   // If in tutor view and user is authenticated, render the interactive Tutor Workspace
   if (currentView === 'tutor' && user) {
-    return <TutorChatWorkspace onBackToDashboard={() => setCurrentView('dashboard')} />;
+    return (
+      <TutorChatWorkspace
+        onBackToDashboard={() => {
+          setInitialDocForTutor(null);
+          setCurrentView('dashboard');
+        }}
+        initialDocument={initialDocForTutor}
+      />
+    );
   }
 
   return (
@@ -428,7 +437,8 @@ function MainApp() {
         isOpen={docsModalOpen}
         onClose={() => setDocsModalOpen(false)}
         onOpenAuth={() => openAuth('login')}
-        onSelectDocumentForChat={() => {
+        onSelectDocumentForChat={(doc) => {
+          setInitialDocForTutor(doc);
           setCurrentView('tutor');
         }}
       />

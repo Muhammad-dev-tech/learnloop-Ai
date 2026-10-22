@@ -69,7 +69,8 @@ export async function sendMessageToTutor(
   sessionId: number,
   content: string,
   learningMode?: LearningMode,
-  token?: string | null
+  token?: string | null,
+  documentId?: number
 ): Promise<SendMessageResponse> {
   const authToken = getAuthToken(token);
   const headers: Record<string, string> = {
@@ -85,6 +86,7 @@ export async function sendMessageToTutor(
     body: JSON.stringify({
       content,
       learning_mode: learningMode,
+      document_id: documentId || null,
     }),
   });
 

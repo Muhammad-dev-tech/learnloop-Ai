@@ -61,6 +61,7 @@ class SessionDetailRead(SessionRead):
 class SendMessageRequest(BaseModel):
     content: str = Field(..., min_length=1, max_length=10000, description="Message from student to AI tutor")
     learning_mode: Optional[str] = Field(None, description="Optional override for learning mode")
+    document_id: Optional[int] = Field(None, description="Optional document ID for grounded RAG inquiry")
 
 class SendMessageResponse(BaseModel):
     user_message: MessageRead

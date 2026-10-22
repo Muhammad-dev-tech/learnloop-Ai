@@ -98,13 +98,15 @@ async def create_session(
         f"Selected mode: {payload.learning_mode}, difficulty: {payload.current_difficulty}. "
         f"Introduce yourself warmly as their LearnLoop AI tutor, outline what we will cover, and ask a kick-off question."
     )
+    doc_ctx = "\n---\n".join([f"[{c.page_or_section}]: {c.content}" for c in doc.chunks[:5]]) if (doc and doc.chunks) else None
     tutor_reply = await generate_tutor_response(
         prompt=welcome_prompt,
         topic_name=topic_name,
         learning_mode=payload.learning_mode,
         difficulty=payload.current_difficulty,
         conversation_history=[],
-        learning_objectives=objectives
+        learning_objectives=objectives,
+        document_context=doc_ctx
     )
 
     initial_msg = Message(
@@ -306,8 +308,37 @@ async def send_message_to_tutor(
     # Add the current user message to turns
     history_turns.append({"role": "user", "content": payload.content.strip()})
 
-    topic_name = session.topic.name if session.topic else "General Computing"
-    objectives = [obj.objective_text for obj in session.topic.learning_objectives] if session.topic else []
+    raw_title = conv.title.split(" (")[0] if conv else "General Study"
+    topic_name = session.topic.name if session.topic else raw_title
+    objectives = [obj.objective_text for obj in session.topic.learning_objectives] if session.topic else [f"Course concepts from {topic_name}"]
+
+    # Check for attached or associated course document
+    doc_context = None
+    retrieved_citations = []
+    target_doc_id = payload.document_id
+
+    if not target_doc_id:
+        doc_match = await db.execute(
+            select(Document).where(Document.user_id == current_user.id, Document.filename == raw_title)
+        )
+        found_doc = doc_match.scalars().first()
+        if found_doc:
+            target_doc_id = found_doc.id
+
+    if target_doc_id:
+        doc_res = await db.execute(
+            select(Document).options(selectinload(Document.chunks)).where(
+                Document.id == target_doc_id, Document.user_id == current_user.id
+            )
+        )
+        matched_doc = doc_res.scalars().first()
+        if matched_doc and matched_doc.chunks:
+            from app.services.rag_retriever import retrieve_relevant_chunks
+            retrieved_citations = retrieve_relevant_chunks(payload.content.strip(), matched_doc.chunks, top_k=4)
+            if retrieved_citations:
+                doc_context = "\n---\n".join([f"[{c['page_or_section']}]: {c['content']}" for c in retrieved_citations])
+            if not session.topic:
+                topic_name = matched_doc.filename
 
     # 3. Call AI Tutor Service
     tutor_reply = await generate_tutor_response(
@@ -316,15 +347,21 @@ async def send_message_to_tutor(
         learning_mode=active_mode,
         difficulty=session.current_difficulty,
         conversation_history=history_turns,
-        learning_objectives=objectives
+        learning_objectives=objectives,
+        document_context=doc_context
     )
 
-    # 4. Save AI tutor response
+    # 4. Save AI tutor response with citations
+    source_ref = {
+        "suggested_followups": tutor_reply.get("suggested_followups", []),
+        "citations": retrieved_citations if retrieved_citations else None,
+        "document_name": topic_name if doc_context else None
+    }
     assistant_msg = Message(
         conversation_id=conv.id,
         role="assistant",
         content=tutor_reply["content"],
-        source_references={"suggested_followups": tutor_reply.get("suggested_followups", [])}
+        source_references=source_ref
     )
     db.add(assistant_msg)
     await db.commit()
