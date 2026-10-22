@@ -345,30 +345,32 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
           ) : (
             sessions.map(s => {
               const isSelected = activeSession?.id === s.id;
-              const modeMeta = MODE_CONFIG[s.learning_mode || 'tutor'];
+              const isDoc = s.session_type === 'document';
               return (
                 <div
                   key={s.id}
                   onClick={() => loadSessionDetail(s.id)}
                   className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-brand-50 dark:bg-brand-600/15 border-brand-500 text-brand-700 dark:text-brand-300 shadow-sm'
+                      ? 'bg-brand-50/80 dark:bg-brand-950/40 border-brand-500 text-brand-700 dark:text-brand-300 shadow-sm'
                       : 'bg-white dark:bg-slate-950/30 border-slate-200 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-xs font-semibold line-clamp-1 truncate">{s.topic_name}</h4>
-                    <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 text-slate-500 shrink-0">
-                      {s.current_difficulty}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {isDoc ? (
+                        <FileText className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                      ) : (
+                        <BookOpen className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                      )}
+                      <h4 className="text-xs font-semibold truncate">{s.topic_name}</h4>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between mt-2 text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-400" />
+                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 pl-5">
+                    <span className="truncate">{isDoc ? 'Syllabus Grounded' : (s.subject_name || 'Curriculum')}</span>
+                    <span className="flex items-center gap-1 shrink-0 ml-1">
+                      <Clock className="w-2.5 h-2.5" />
                       {new Date(s.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                    </span>
-                    <span className="capitalize text-brand-600 dark:text-brand-400 font-medium">
-                      {modeMeta ? modeMeta.label.split(' ')[0] : 'Tutor'}
                     </span>
                   </div>
                 </div>
@@ -432,18 +434,28 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
             <div className="flex-1 overflow-y-auto space-y-2 py-2">
               {sessions.map(s => {
                 const isSelected = activeSession?.id === s.id;
+                const isDoc = s.session_type === 'document';
                 return (
                   <div
                     key={s.id}
                     onClick={() => loadSessionDetail(s.id)}
                     className={`p-3 rounded-xl border cursor-pointer text-xs transition-all ${
                       isSelected
-                        ? 'bg-brand-50 dark:bg-brand-600/15 border-brand-500 text-brand-600 dark:text-brand-300 font-semibold'
+                        ? 'bg-brand-50/80 dark:bg-brand-950/40 border-brand-500 text-brand-600 dark:text-brand-300 font-semibold shadow-sm'
                         : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                   >
-                    <div className="truncate font-semibold">{s.topic_name}</div>
-                    <div className="text-[10px] text-slate-400 mt-1 capitalize">{s.learning_mode} • {s.current_difficulty}</div>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {isDoc ? (
+                        <FileText className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                      ) : (
+                        <BookOpen className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                      )}
+                      <div className="truncate font-semibold flex-1">{s.topic_name}</div>
+                    </div>
+                    <div className="text-[10px] text-slate-400 mt-1 pl-5">
+                      {isDoc ? 'Syllabus Grounded' : (s.subject_name || 'Curriculum')}
+                    </div>
                   </div>
                 );
               })}
@@ -758,6 +770,9 @@ export const TutorChatWorkspace: React.FC<TutorChatWorkspaceProps> = ({
         isOpen={selectorOpen}
         onClose={() => setSelectorOpen(false)}
         onSelectTarget={handleCreateSession}
+        onSelectExistingSession={loadSessionDetail}
+        existingSessions={sessions}
+        onOpenUploadModal={() => setDocsModalOpen(true)}
         isLoading={creatingSession}
       />
 

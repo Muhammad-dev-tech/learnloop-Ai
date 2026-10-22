@@ -169,13 +169,25 @@ async def list_user_sessions(
     output = []
     for s in sessions:
         conv = s.conversations[0] if s.conversations else None
+        
+        # Resolve real topic or document title
+        if s.topic:
+            resolved_topic_name = s.topic.name
+            resolved_subject_name = s.topic.subject.name if s.topic.subject else "Curriculum"
+        elif conv and conv.title:
+            resolved_topic_name = conv.title.rsplit(" (", 1)[0]
+            resolved_subject_name = "Uploaded Syllabus / Notes"
+        else:
+            resolved_topic_name = "Uploaded Document Study" if s.session_type == "document" else "General Study"
+            resolved_subject_name = "Uploaded Syllabus / Notes" if s.session_type == "document" else None
+
         output.append(
             SessionRead(
                 id=s.id,
                 user_id=s.user_id,
                 topic_id=s.topic_id,
-                topic_name=s.topic.name if s.topic else "General Study",
-                subject_name=s.topic.subject.name if s.topic and s.topic.subject else None,
+                topic_name=resolved_topic_name,
+                subject_name=resolved_subject_name,
                 session_type=s.session_type,
                 current_difficulty=s.current_difficulty,
                 status=s.status,
@@ -229,12 +241,23 @@ async def get_session_detail(
                 )
             )
 
+    # Resolve real topic or document title
+    if session.topic:
+        resolved_topic_name = session.topic.name
+        resolved_subject_name = session.topic.subject.name if session.topic.subject else "Curriculum"
+    elif conv and conv.title:
+        resolved_topic_name = conv.title.rsplit(" (", 1)[0]
+        resolved_subject_name = "Uploaded Syllabus / Notes"
+    else:
+        resolved_topic_name = "Uploaded Document Study" if session.session_type == "document" else "General Study"
+        resolved_subject_name = "Uploaded Syllabus / Notes" if session.session_type == "document" else None
+
     return SessionDetailRead(
         id=session.id,
         user_id=session.user_id,
         topic_id=session.topic_id,
-        topic_name=session.topic.name if session.topic else "General Study",
-        subject_name=session.topic.subject.name if session.topic and session.topic.subject else None,
+        topic_name=resolved_topic_name,
+        subject_name=resolved_subject_name,
         session_type=session.session_type,
         current_difficulty=session.current_difficulty,
         status=session.status,
